@@ -15,7 +15,7 @@ The application includes the following translations of the Bible:
 ## Usage
 
 ### To display usage information, run bible-reader -h at the command line:
-
+```
 usage: bible-reader.py [-h] [left] [right] [book] [chapter]
 
 read the bible with translations side-by-side
@@ -32,11 +32,12 @@ optional arguments:
   -h, --help  show this help message and exit
 
 versions available: nvi lu niv kj vulg nv nkj
-
+```
 ### To start the application with the New King James and Luther versions:
 
+```
 bible-reader nkj lu
-
+```
 ## Dependencies
 
 Depends on the Urwid Library (http://urwid.org/)
