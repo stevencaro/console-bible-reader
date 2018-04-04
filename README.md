@@ -16,7 +16,7 @@ The application includes the following translations of the Bible:
 bible-reader -h
 usage: bible-reader.py [-h] [left] [right] [book] [chapter]
 
-side-by-side bible reader
+read the bible with translations side-by-side
 
 positional arguments:
   left        version on left screen
