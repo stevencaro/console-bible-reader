@@ -33,11 +33,18 @@ optional arguments:
 
 versions available: nvi lu niv kj vulg nv nkj
 ```
+### To start the application with the default versions:
+```
+bible-reader
+```
+
 ### To start the application with the New King James and Luther versions:
 
 ```
 bible-reader nkj lu
 ```
+
+
 ## Dependencies
 
 Depends on the Urwid Library (http://urwid.org/)
