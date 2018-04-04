@@ -21,12 +21,14 @@ usage: bible-reader.py [-h] [left] [right] [book] [chapter]
 read the bible with translations side-by-side
 
 positional arguments:
+
   left        version on left screen
   right       version on right screen
   book        bible book to display
   chapter     chapter to display
 
 optional arguments:
+
   -h, --help  show this help message and exit
 
 versions available: nvi lu niv kj vulg nv nkj
