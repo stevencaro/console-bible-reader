@@ -13,26 +13,27 @@ The application includes the following translations of the Bible:
  * Luther (German)
 
 ## Usage
-To display usage information, run bible-reader -h at the command line:
 
-  usage: bible-reader.py [-h] [left] [right] [book] [chapter]
+### To display usage information, run bible-reader -h at the command line:
 
-  read the bible with translations side-by-side
+usage: bible-reader.py [-h] [left] [right] [book] [chapter]
 
-  positional arguments:
-    left        version on left screen
-    right       version on right screen
-    book        bible book to display
-    chapter     chapter to display
+read the bible with translations side-by-side
 
-  optional arguments:
-    -h, --help  show this help message and exit
+positional arguments:
+  left        version on left screen
+  right       version on right screen
+  book        bible book to display
+  chapter     chapter to display
 
-  versions available: nvi lu niv kj vulg nv nkj
+optional arguments:
+  -h, --help  show this help message and exit
 
-To start the application with the New King James and Luther versions:
+versions available: nvi lu niv kj vulg nv nkj
 
-  bible-reader nkj lu
+### To start the application with the New King James and Luther versions:
+
+bible-reader nkj lu
 
 ## Dependencies
 
