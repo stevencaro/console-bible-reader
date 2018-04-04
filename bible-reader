@@ -1,0 +1,268 @@
+#!/usr/bin/python3
+
+import argparse as arg
+import logging as log
+import pdb
+
+import urwid as ur
+from urwid import signals
+
+from model import *
+from bibleversions import BibleVersion
+from readercommands import ReaderCommands
+
+class Reader(ur.WidgetWrap): #, ur.WidgetContainerMixin):
+
+    #signals = ['pagedown', 'pageup']
+
+    class ChapterListWalker(ur.SimpleListWalker):
+
+        def __init__(self,lc):
+
+            log.info('chapter list walker __init__')
+            super().__init__(lc)
+
+        def keypress(self,size,key):
+            if key == 'page down':
+                log.info('chapter list walker page down')
+                return super().keypress(size, key)
+            if key == 'page up':
+                log.info('chapter list walker page down')
+                return super().keypress(size, key)
+
+        #def __getitem__(self, position)
+        # returns widget at position or raise an IndexError or
+        # KeyError
+
+        #def next_position(self, position):
+        # returns the position below passed position or
+        # raise an IndexError or KeyError
+
+        #def prev_position(self, position):
+        # returns the position above passed position or
+        # raise an IndexError or KeyError
+
+        #def focus(self):
+        # attribute or property containing the focus position,
+        # or define MyV1ListWalker.get_focus() as above
+
+        #def get_focus(self):
+        #    return self._get_at_pos(self.focus)
+
+        #def set_focus(self, focus):
+        #    self.focus = focus
+        #    self._modified()
+
+        #def focus(self):
+        #    focus = super().focus()
+        #    log.info("ChapterListWalker.get_focus request ", focus)
+        #    return focus
+
+    def __init__(self, left, right, book, chap):
+
+        #ur.connect_signal(self, 'pagedown', self.pagedown)
+        self.bible  = BibleVersion()
+        self.lbible = self.bible(left)
+        self.rbible = self.bible(right)
+        self.update(book, chap)
+
+        self.commands = ReaderCommands(self)  # helper class
+
+        super().__init__(self.reader)
+
+    #def pagedown(self, size, key):
+    #    self.lcontent.keypress(size, 'page down')
+    #    self.rcontent.keypress(size, 'page down')
+
+    #def pageup(self, size, key):
+    #    self.lcontent.keypress(size, 'page up')
+    #    self.rcontent.keypress(size, 'page up')
+
+    def handle_command(self, cmd):
+        log.info('Reader.handle_command ' + cmd)
+        if cmd in ['q', 'quit', 'exit']:
+            raise ur.ExitMainLoop
+
+        self.commands.parse_command(cmd)
+
+    ### fix? this method does a lot.
+    def update(self, book = 'gen', chap = 1):
+        log.info('Reader.update: book ' + book + ' chap ' + str(chap))
+
+        ### error handling
+        if self.lbible(book, chap) is None:
+            return
+
+        ### build the titles displayed in the linebox
+        ltitle = self.lbible.title
+        rtitle = self.rbible.title
+
+        ### formats the content and loads it into arrays passed into the listwalker class
+        ### lc,rc = left content, right content
+        #pdb.set_trace()
+        lc, rc = [], []
+        #### load left content into lc
+        for num, verse in self.lbible(book, chap).verslist[1:]:
+            vnum = '{:<3}'.format(num)
+            text = ur.Text( [('lvnum', vnum), ('lverse', verse) ])
+            sep = ur.Text( ('lsep', '~'),  align = 'center')
+            lc.extend( [text, sep] )
+        #### load right content into rc
+        for num, verse in self.rbible(book, chap).verslist[1:]:
+            vnum = '{:<3}'.format(num)
+            text = ur.Text( [('rvnum', vnum), ('rverse', verse)] )
+            sep = ur.Text( ('rsep', '~'),  align='center')
+            rc.extend( [text, sep] )
+
+        ## for paging through the tool with HOME and END key
+        self.currbook = book
+        self.currchap = chap
+
+        ### create the list box widgets with the formatted content
+        #self.lcontent = ur.ListBox(ur.SimpleListWalker(lc))
+        #self.rcontent = ur.ListBox(ur.SimpleListWalker(rc))
+        self.lcontent = ur.ListBox(Reader.ChapterListWalker(lc))
+        self.rcontent = ur.ListBox(Reader.ChapterListWalker(rc))
+
+        ### the title of the frame widget put into the header section.
+        title = FullName[book] + ' ' + str(chap)
+        header = ur.Text(('title', title), align='center')
+
+        ### separator arrows between sides
+        self.focus_left  = ur.Filler(ur.SolidFill('<'), height=('relative',10))
+        self.focus_right = ur.Filler(ur.SolidFill('>'), height=('relative',10))
+        self.focus_div   = ur.WidgetWrap(self.focus_left)
+
+        ### body of the frame: the central layout of the tool
+        body = ur.Columns([
+                    ur.Padding( ur.LineBox(self.lcontent, title = ltitle), left = 0, right = 0),
+                    (1, self.focus_div),
+                    ur.Padding( ur.LineBox(self.rcontent, title = rtitle), left = 0, right = 0)
+                ], dividechars=0)
+
+        ### footer of the frame: contains the command prompt for the tool
+        ### Command widget is a subclass of the urwid Edit widget
+        self.footer = Command(caption = '''Tab cycles command mode: < l | r version> | <book> | <chapter> ~> ''')
+
+        ### footer has its own command handler for exit commands.
+        ur.connect_signal(self.footer, 'handle_command', self.handle_command)
+
+        ### assemble it all together
+        self.reader = ur.Frame(header=header, body=body, footer=self.footer)
+        self._w = self.reader
+
+
+    def keypress(self, size, key):
+
+        #if isinstance (self.focus, Command):   # only container widgets set focus
+        #    return key
+
+
+        ## page through content
+        if key == 'home':
+            self.update(book=self.currbook, chap=self.currchap - 1)
+        #elif key == 'page up':
+        #    self.pageup(size, key)
+        #elif key == 'page down':
+        #    self.pagedown(size, key)
+        elif key == 'end':
+            self.update(book=self.currbook, chap=self.currchap + 1)
+
+        # toggle mode to enter commands
+        elif key == 'tab' and self.reader.focus_position != 'footer':  # FIX: better way?
+            self.reader.focus_position = 'footer'
+        elif key == 'tab' and self.reader.focus_position == 'footer':
+            self.reader.focus_position = 'body'
+
+        # change focus to left or right,
+        elif key == 'left':
+            self.focus_div._w = self.focus_left
+            return super().keypress(size,key)
+        elif key == 'right':
+            self.focus_div._w = self.focus_right
+            return super().keypress(size,key)
+        #else:
+        #    return super().keypress(size,key)
+        log.info('Reader.keypress <' + str(key) + '> ' + self.currbook + ' '
+                 + str(self.currchap) + ' ' + str(self) + ' Focus: ' + str(self.focus))
+
+        return super().keypress(size,key)
+
+
+class Command(ur.Edit):  # <Command selectable flow widget  >
+
+    signals = ['handle_command', 'set_chapter']
+
+    def keypress(self, size, key):
+        log.info('Command keypress <' + key + '>' + ' ' + str(self) + ' Focus: ' + str(self.focus))
+
+        if key == 'enter':
+            cmd = self.get_edit_text().lower()
+            ur.emit_signal(self, 'handle_command', cmd)
+            self.set_edit_text('')
+        #elif key == ' ' or key == 'b':
+        #    log.info('Command key b or space ' + cmd)
+        #    self.set_edit_text( cmd + key )
+        else:
+            #self.set_edit_text(cmd)
+            return super().keypress(size,key)
+
+        return None
+
+def parse_command_line():
+    ### puts abbreviations of bibles (from model) into a list   # rename BibleVersion?
+    choices = list(BibleVersion().pickles.keys())               # clear this dependency?
+
+    ### Option parsing
+    parser = arg.ArgumentParser(prog='reader.py',
+                                description = 'side-by-side bible reader',
+                                epilog='versions available: ' + ' '.join(choices))
+
+    parser.add_argument('left',  nargs = '?', metavar='left',  \
+                        help='version on left screen',  choices=choices )
+    parser.add_argument('right', nargs = '?', metavar='right', \
+                        help='version on right screen', choices=choices )
+    parser.add_argument('book',  nargs = '?', metavar='book',  \
+                        help='bible book to display' )
+    parser.add_argument('chap',  nargs = '?', metavar='chapter', \
+                        help='chapter to display', type=int)
+
+    parser.set_defaults(left = 'nkj', right = 'niv', book = 'gen', chap = 1)
+
+    return parser.parse_args()
+
+def palette():
+    return [ ('title','yellow, bold', 'default'),
+            ('chap','light blue, bold', 'default'),
+            ('lvnum', 'dark blue', 'default'),
+            ('lverse', 'light green', 'default'),
+            ('lsep', 'dark blue', 'default'),
+            ('rvnum', 'dark green', 'default'),
+            ('rverse', 'light cyan', 'default'),
+            ('rsep', 'dark green', 'default') ]
+
+if __name__ == '__main__':
+
+    #
+    log.basicConfig(format='%(asctime)s %(message)s', datefmt='%I:%M:%S',
+                    filename='ur.log', level=log.INFO)
+
+    #
+    def unhandled_input(key):
+        if key in ('Q', 'q', 'esc'):
+            raise ur.ExitMainLoop()
+
+    #
+    args = parse_command_line()
+
+    ### create Main widget, sending in options from ArgumentParser class
+    main = Reader( args.left, args.right, args.book, args.chap )
+    ### create and run Urwid event loop
+    loop = ur.MainLoop(main,
+                       palette = palette(),
+                       handle_mouse = False,
+                       unhandled_input = unhandled_input,
+                       screen = ur.raw_display.Screen())
+    loop.run()
+
+    #log.info(main.get_focus_widgets())

@@ -1,0 +1,3 @@
+#!/usr/bin/fish
+
+cloc --exclude-dir=bak,data *

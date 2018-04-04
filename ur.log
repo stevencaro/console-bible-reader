@@ -1,0 +1,8 @@
+03:14:36 Reader.update: book gen chap 1
+03:14:36 chapter list walker __init__
+03:14:36 chapter list walker __init__
+03:14:38 Reader.keypress <q> gen 1 <Reader selectable box widget> Focus: None
+03:14:42 Reader.update: book ecc chap 1
+03:14:42 chapter list walker __init__
+03:14:42 chapter list walker __init__
+03:14:44 Reader.keypress <q> ecc 1 <Reader selectable box widget> Focus: None

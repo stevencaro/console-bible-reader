@@ -1,0 +1,26 @@
+bible-reader     --> main tool
+	model          --> bibles, LongName, ShortName, abbr4name
+	bibleversions  --> BibleVersion class
+	readercommands --> ReaderCommands class
+
+model.py
+	booknames (LongName, abbr4name)
+
+bibleversions.py
+	model
+
+readercommands.py
+	no internal deps
+
+align_string.py          --> 3rd party module
+	no internal deps
+
+build-bible-data-files.py
+	model
+
+test-bible-model.py
+	model
+
+***** booknames.py          --> factored into model
+	******* no internal deps
+
